@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="220" viewBox="0 0 920 220">
+  <defs>
+    <filter id="blur" x="-10%" y="-50%" width="120%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" />
+    </filter>
+  </defs>
+  <rect x="0" y="0" width="920" height="220" fill="#0b0f19"/>
+  <g opacity="0.6">
+    <rect x="20" y="20" rx="12" ry="12" width="880" height="140" fill="#111827" />
+    <rect x="40" y="40" rx="6" ry="6" width="520" height="100" fill="#111827" stroke="#1f2937" />
+    <rect x="580" y="40" rx="6" ry="6" width="300" height="100" fill="#111827" stroke="#1f2937" />
+  </g>
+  <g transform="translate(0,0)">
+    <rect x="0" y="160" width="920" height="60" fill="#111827" opacity="0.7"/>
+    <rect x="0" y="160" width="920" height="60" fill="none" stroke="#ffffff" opacity="0.1"/>
+    <g filter="url(#blur)" opacity="0.25">
+      <rect x="0" y="160" width="920" height="60" fill="#111827"/>
+    </g>
+    <g font-family="system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, sans-serif" font-size="18" font-weight="600" fill="#e5e7eb">
+      <rect x="300" y="170" rx="8" ry="8" width="150" height="40" fill="#1f2937" stroke="#374151"/>
+      <text x="318" y="196">📊 Statistika</text>
+      <rect x="470" y="170" rx="8" ry="8" width="150" height="40" fill="#1f2937" stroke="#374151"/>
+      <text x="494" y="196">📜 Taisyklės</text>
+    </g>
+  </g>
+  <g font-family="system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, sans-serif" fill="#9ca3af" font-size="14">
+    <text x="20" y="200">Apatinė veiksmų juosta (visuose ekrano dydžiuose): 📊 Statistika • 📜 Taisyklės</text>
+  </g>
+</svg>

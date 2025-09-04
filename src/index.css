@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+:root { color-scheme: dark; }
+body {
+  background: radial-gradient(1200px 600px at 50% -10%, rgba(16,185,129,0.12), rgba(0,0,0,0)) no-repeat,
+              radial-gradient(1000px 500px at 120% 10%, rgba(59,130,246,0.10), rgba(0,0,0,0)) no-repeat,
+              #0b1016;
+}
+
+/* App card */
+.app-card {
+  background-color: rgba(17,24,39,0.75); /* gray-900/75 */
+  backdrop-filter: saturate(140%) blur(6px);
+  border: 1px solid #1f2937; /* gray-800 */
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  padding: 1rem;
+}
+
+/* Custom feedback colors */
+.bg-correct { background-color: green; }
+.border-correct { border-color: green; }
+.bg-present { background-color: #c9b458; }
+.border-present { border-color: #c9b458; }
+.bg-absent { background-color: #787c7e; }
+.border-absent { border-color: #787c7e; }
+
+/* Button base */
+.keyboard-button, .key-btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.25rem;
+  background-color: #6b7280; /* gray-500 */
+  color: white;
+}
+.keyboard-button:hover, .key-btn:hover { background-color: #9ca3af; } /* gray-400 */
+.keyboard-button:active, .key-btn:active { background-color: #4b5563; } /* gray-600 */
+/* Key borders and subtle elevation */
+.key-btn { border: 1px solid #374151; box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset; }
+/* Key press micro-animation */
+.key-btn { transition: transform 80ms ease, background-color 160ms ease; }
+.key-btn:active { transform: scale(0.96); }
+/* Ripple effect */
+.key-btn { position: relative; overflow: hidden; }
+.key-btn::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 50%; inset-block-start: 50%;
+  inline-size: 0; block-size: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 60%);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+.key-btn:active::after { animation: key-ripple 320ms ease-out forwards; }
+
+/* On-screen keyboard sizing helpers */
+.key-wide { min-width: 3.5rem; padding-left: 0.75rem; padding-right: 0.75rem; }
+.key-small { padding: 0.25rem 0.5rem; font-size: 0.9rem; line-height: 1; }
+
+@media (max-width: 420px) {
+  .key-wide { min-width: 3rem; }
+  .key-small { font-size: 0.85rem; }
+}
+
+/* Legend square */
+.legend-box {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #374151; /* gray-700 */
+  border-radius: 0.25rem;
+}
+
+/* Responsive tile sizing for mobile */
+.tile {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-width: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 120ms ease;
+  will-change: transform, background-color, border-color;
+  backface-visibility: hidden;
+}
+
+@media (max-width: 420px) {
+  .tile { width: 13.5vw; height: 13.5vw; font-size: 6vw; }
+}
+
+/* Animations */
+@keyframes flip-in {
+  0% { transform: perspective(600px) rotateX(90deg) scale(0.98); }
+  60% { transform: perspective(600px) rotateX(0deg) scale(1.02); }
+  100% { transform: perspective(600px) rotateX(0deg) scale(1); }
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.94); }
+  80% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.anim-flip { animation: flip-in 300ms ease-out both; transform-origin: center; }
+.anim-pop { animation: pop-in 140ms ease-out both; }
+.anim-shake { animation: shake 400ms ease-in-out; }
+
+/* Keyboard ripple */
+@keyframes key-ripple {
+  0% { opacity: 0.45; inline-size: 0; block-size: 0; }
+  100% { opacity: 0; inline-size: 180%; block-size: 180%; }
+}
+
+/* Victory pulse */
+@keyframes pulse-win {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.anim-pulse-win { animation: pulse-win 300ms ease-in-out; }
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .anim-flip, .anim-pop, .anim-shake, .anim-pulse-win { animation-duration: 1ms !important; }
+  .bar-grow { transition: none !important; }
+}
+
+/* Toast show */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toast { animation: toast-in 180ms ease-out forwards; }
+
+/* Toast styling */
+.toast {
+  background-color: #1f2937; /* gray-800 */
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+}
+
+/* Stats bar (timer & record) */
+.stats-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  background-color: #111827; /* gray-900 */
+  border: 1px solid #374151; /* gray-700 */
+  border-radius: 9999px; /* pill */
+  color: #e5e7eb; /* gray-200 */
+}
+.stat-ico { font-size: 0.95rem; line-height: 1; }
+.stat-label { font-size: 0.825rem; opacity: 0.8; }
+.stat-value { font-size: 0.9rem; }
+
+/* Modal animations */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal-overlay { animation: overlay-in 180ms ease-out; }
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-card { animation: card-in 200ms ease-out; transform-origin: center; }
+
+/* Closing state uses reverse direction for a smooth outro */
+.modal-overlay.is-closing { animation: overlay-in 160ms ease-in reverse; }
+.modal-card.is-closing { animation: card-in 180ms ease-in reverse; }
+
+/* Histogram bar grow */
+.bar-grow { transition: inline-size 400ms ease; }
+
+/* Soft pulse for Hard Mode */
+@keyframes soft-pulse {
+  0% { transform: translateZ(0) scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0.25); }
+  50% { transform: translateZ(0) scale(1.03); box-shadow: 0 0 0 6px rgba(239,68,68,0.12); }
+  100% { transform: translateZ(0) scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+}
+.btn-pulse { animation: soft-pulse 2400ms ease-in-out infinite; }
