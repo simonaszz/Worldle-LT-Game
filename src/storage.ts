@@ -4,6 +4,7 @@ import solutions from './words/solutions.json'
 
 const KEY = 'wordle-lt:state'
 const STATS_KEY = 'wordle-lt:stats'
+const LEADER_KEY = 'wordle-lt:leaderboard'
 
 export function loadState(): GameState {
   try {
@@ -93,4 +94,53 @@ export function recordResult(epochDay: number, result: DayResult, attemptsCount?
   s.lastPlayedDay = epochDay
   saveStats(s)
   return s
+}
+
+// --- Leaderboard storage ---
+export interface LeaderEntry {
+  name: string
+  epochDay: number
+  attempts: number
+  timeMs: number | null
+  hardMode: boolean
+  dateISO: string
+}
+
+function sortLeaders(list: LeaderEntry[]): LeaderEntry[] {
+  return [...list].sort((a, b) => {
+    // Hard Mode first
+    if (a.hardMode !== b.hardMode) return a.hardMode ? -1 : 1
+    // Lower attempts is better
+    if (a.attempts !== b.attempts) return a.attempts - b.attempts
+    // Non-null time first; lower time better; nulls last
+    if (a.timeMs === null && b.timeMs !== null) return 1
+    if (a.timeMs !== null && b.timeMs === null) return -1
+    if (a.timeMs !== null && b.timeMs !== null && a.timeMs !== b.timeMs) return a.timeMs - b.timeMs
+    // Fallback: newer first
+    return (b.dateISO || '').localeCompare(a.dateISO || '')
+  })
+}
+
+export function loadLeaderboard(): LeaderEntry[] {
+  try {
+    const raw = localStorage.getItem(LEADER_KEY)
+    if (!raw) return []
+    const data = JSON.parse(raw) as LeaderEntry[]
+    if (!Array.isArray(data)) return []
+    return sortLeaders(data.filter(e => typeof e?.name === 'string'))
+  } catch {
+    return []
+  }
+}
+
+export function saveLeaderboard(entries: LeaderEntry[]): void {
+  localStorage.setItem(LEADER_KEY, JSON.stringify(sortLeaders(entries)))
+}
+
+export function addLeaderboardEntry(entry: LeaderEntry, limit = 50): LeaderEntry[] {
+  const list = loadLeaderboard()
+  list.push(entry)
+  const sorted = sortLeaders(list).slice(0, limit)
+  saveLeaderboard(sorted)
+  return sorted
 }

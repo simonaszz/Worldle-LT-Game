@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { loadStats } from '../storage'
+import * as storage from '../storage'
 import { baseEpochDay } from '../domain/logic'
 
 export function StatsModal({ open, onClose, animationDuration = 700 }: { open: boolean; onClose: () => void; animationDuration?: number }) {
@@ -14,7 +14,14 @@ export function StatsModal({ open, onClose, animationDuration = 700 }: { open: b
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const stats = useMemo(() => loadStats(), [open])
+  const stats = useMemo(() => storage.loadStats(), [open])
+  const leaders = useMemo(() => {
+    try {
+      return storage.loadLeaderboard ? storage.loadLeaderboard() : []
+    } catch {
+      return []
+    }
+  }, [open])
   const winPercent = stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0
   const todayEpoch = useMemo(() => baseEpochDay(), [])
   const closeRef = useRef<HTMLButtonElement | null>(null)
@@ -44,30 +51,31 @@ export function StatsModal({ open, onClose, animationDuration = 700 }: { open: b
   // Animated number (odometer-style) for KPI values
   const AnimatedNumber = ({ value, suffix = '', duration = animationDuration }: { value: number; suffix?: string; duration?: number }) => {
     const [display, setDisplay] = useState(0)
+    const prevRef = useRef(0)
     useEffect(() => {
-      // If duration is 0 or negative, update immediately to avoid division by zero/Infinity
-      if (!duration || duration <= 0) {
-        setDisplay(Math.round(value))
+      const target = Math.round(value)
+      // If duration is 0 or no change, update immediately
+      if (!duration || duration <= 0 || prevRef.current === target) {
+        prevRef.current = target
+        setDisplay(target)
         return
       }
       let raf = 0
       const start = performance.now()
-      const from = 0
-      const to = value
+      const from = prevRef.current
+      const to = target
       const step = (t: number) => {
         const p = Math.min(1, (t - start) / duration)
         // easeOutCubic
         const e = 1 - Math.pow(1 - p, 3)
         const v = Math.round(from + (to - from) * e)
+        prevRef.current = v
         setDisplay(v)
-        // Schedule next frame only while animating
-        if (p < 1) {
-          raf = requestAnimationFrame(step)
-        }
+        if (p < 1) raf = requestAnimationFrame(step)
       }
       raf = requestAnimationFrame(step)
       return () => cancelAnimationFrame(raf)
-    }, [value, duration, open])
+    }, [value, duration])
     return <span aria-live="polite" className="tabular-nums">{display}{suffix}</span>
   }
 
@@ -124,11 +132,12 @@ export function StatsModal({ open, onClose, animationDuration = 700 }: { open: b
             // maxAttempts is derived as Math.max(1, ...stats.byAttempts), so it's always >= 1.
             // Compute width with a single clamp to remove an unreachable branch and improve testability.
             const w = Math.max(6, Math.round((v / maxAttempts) * 100))
+            const wCls = `w-pct-${w}`
             return (
               <div key={i} className="flex items-center gap-2">
                 <span className="w-8 text-right">{i + 1}</span>
                 <div className="flex-1 bg-gray-700/60 h-4 rounded">
-                  <div className="h-4 bg-green-600 rounded bar-grow" style={{ inlineSize: `${w}%` }} />
+                  <div className={`h-4 bg-green-600 rounded bar-grow`} style={{ inlineSize: `${w}%` }} />
                 </div>
                 <span className="w-10 text-right tabular-nums" title={`${pct}%`}>{v}</span>
               </div>
@@ -160,6 +169,40 @@ export function StatsModal({ open, onClose, animationDuration = 700 }: { open: b
           <div className="flex items-center gap-1"><span className="w-3 h-3 bg-red-500 inline-block rounded-[2px]"></span> Pralaimėta</div>
           <div className="flex items-center gap-1"><span className="w-3 h-3 bg-gray-600/60 inline-block rounded-[2px]"></span> Nežaista</div>
         </div>
+
+        <h3 className="text-lg font-semibold mt-4 mb-2">🏆 Lyderių lentelė</h3>
+        {leaders.length === 0 ? (
+          <div className="text-sm opacity-70">Kol kas įrašų nėra. Laimėk žaidimą ir įrašyk savo vardą!</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-separate border-spacing-y-1" aria-label="Lyderių lentelė">
+              <thead className="text-left opacity-80">
+                <tr>
+                  <th className="px-2">#</th>
+                  <th className="px-2">Vardas</th>
+                  <th className="px-2">Band.</th>
+                  <th className="px-2">Laikas</th>
+                  <th className="px-2">Rež.</th>
+                  <th className="px-2">Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaders.slice(0, 10).map((e, idx) => (
+                  <tr key={`${e.name}-${e.dateISO}-${idx}`} className="bg-gray-700/40">
+                    <td className="px-2 py-1 tabular-nums">{idx + 1}</td>
+                    <td className="px-2 py-1 font-medium">{e.name}</td>
+                    <td className="px-2 py-1 tabular-nums">{e.attempts}</td>
+                    <td className="px-2 py-1 tabular-nums">{e.timeMs != null ? `${Math.round(e.timeMs / 1000)}s` : '—'}</td>
+                    <td className="px-2 py-1">
+                      <span className={`text-[10px] px-2 py-0.5 rounded border ${e.hardMode ? 'bg-yellow-600/30 border-yellow-300/30' : 'bg-gray-600/40 border-white/10'}`}>{e.hardMode ? 'Hard' : 'Normal'}</span>
+                    </td>
+                    <td className="px-2 py-1 opacity-80">{new Date(e.dateISO).toLocaleDateString('lt-LT')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <div className="mt-4 flex justify-end gap-2">
           <button ref={closeRef} className="keyboard-button" onClick={handleRequestClose}>Uždaryti</button>

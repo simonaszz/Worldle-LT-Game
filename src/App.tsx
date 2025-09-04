@@ -3,10 +3,11 @@ import { Board } from './components/Board'
 import { Keyboard } from './components/Keyboard'
 import { RulesModal } from './components/RulesModal'
 import { StatsModal } from './components/StatsModal'
+import { WinNameModal } from './components/WinNameModal'
 import { Confetti } from './components/Confetti'
 import type { AttemptResult, FeedbackCell, GameState } from './domain/types'
-import { baseEpochDay, emptyState, isWin, pickDailyTarget, scoreGuess, validateGuess, WORDLIST_VERSION } from './domain/logic'
-import { getTodayTarget, loadState, saveState, recordResult } from './storage'
+import { baseEpochDay, emptyState, isWin, scoreGuess, validateGuess, WORDLIST_VERSION } from './domain/logic'
+import { getTodayTarget, loadState, saveState, recordResult, addLeaderboardEntry } from './storage'
 
 export default function App() {
   const [state, setState] = useState<GameState>(() => loadState())
@@ -15,6 +16,8 @@ export default function App() {
   const [showRules, setShowRules] = useState(false)
   const [showStats, setShowStats] = useState(false)
   const [shake, setShake] = useState(false)
+  const [showWinName, setShowWinName] = useState(false)
+  const [winMeta, setWinMeta] = useState<{ attempts: number; timeMs: number | null; hardMode: boolean; epochDay: number } | null>(null)
 
   const target = useMemo(() => getTodayTarget(state), [state.epochDay, state.targetId])
 
@@ -41,9 +44,8 @@ export default function App() {
   useEffect(() => {
     const today = baseEpochDay()
     if (state.epochDay !== today || state.wordlistVersion !== WORDLIST_VERSION) {
-      const t = pickDailyTarget(today, WORDLIST_VERSION)
-      // Preserve bestTimeMs across days
-      setState(s => ({ ...emptyState(), epochDay: today, targetId: t.index, bestTimeMs: s.bestTimeMs }))
+      // Start a fresh random game on new day or wordlist change; keep best time
+      setState(s => ({ ...emptyState(), bestTimeMs: s.bestTimeMs }))
     }
   }, [])
 
@@ -58,6 +60,8 @@ export default function App() {
       ...s,
       current: (s.current + k.toLowerCase()).slice(0, 5),
       startedAt: s.startedAt ?? Date.now(),
+      // Only start per-guess timer in Hard Mode
+      guessDeadline: s.guessDeadline ?? (s.hardMode && s.guessTimeLimitMs ? Date.now() + s.guessTimeLimitMs : null),
     }))
   }
 
@@ -84,12 +88,38 @@ export default function App() {
       // greens by position
       const mustAtPos: Record<number, string> = {}
       const mustInclude = new Set<string>()
+      // Track letter knowledge for stricter hard mode
+      const onlyAbsent = new Set<string>() // letters seen only as absent
+      const seenPresentOrCorrect = new Set<string>()
+      // Minimum required counts for letters revealed as present/correct across attempts
+      const minCount: Record<string, number> = {}
       for (const ar of state.attempts) {
+        // Count present/correct per letter for this attempt
+        const perAttemptCounts: Record<string, number> = {}
         ar.letters.forEach((l, i) => {
-          if (l.state === 'correct') mustAtPos[i] = l.char
-          if (l.state === 'present') mustInclude.add(l.char)
+          if (l.state === 'correct') {
+            mustAtPos[i] = l.char
+            seenPresentOrCorrect.add(l.char)
+            perAttemptCounts[l.char] = (perAttemptCounts[l.char] ?? 0) + 1
+          } else if (l.state === 'present') {
+            mustInclude.add(l.char)
+            seenPresentOrCorrect.add(l.char)
+            perAttemptCounts[l.char] = (perAttemptCounts[l.char] ?? 0) + 1
+          }
         })
+        // Mark only-absent letters from this attempt
+        ar.letters.forEach(l => {
+          if (l.state === 'absent' && !seenPresentOrCorrect.has(l.char)) {
+            onlyAbsent.add(l.char)
+          }
+        })
+        // Update global minCount by taking max across attempts
+        for (const [ch, c] of Object.entries(perAttemptCounts)) {
+          if (!minCount[ch] || c > minCount[ch]!) minCount[ch] = c
+        }
       }
+      // Remove from onlyAbsent any letter that is required by includes/corrects
+      for (const ch of seenPresentOrCorrect) onlyAbsent.delete(ch)
       for (const [iStr, ch] of Object.entries(mustAtPos)) {
         const i = Number(iStr)
         if (guess.length === 5 && guess[i] !== ch) {
@@ -101,6 +131,23 @@ export default function App() {
       for (const ch of mustInclude) {
         if (!guess.includes(ch)) {
           show(`Hard Mode: žodyje privalo būti „${ch.toUpperCase()}“. `)
+          setShake(true); setTimeout(() => setShake(false), 450)
+          return
+        }
+      }
+      // Enforce minimum counts for revealed letters (duplicates)
+      for (const [ch, required] of Object.entries(minCount)) {
+        const actual = guess.split('').filter(c => c === ch).length
+        if (actual < required) {
+          show(`Hard Mode: žodyje turi būti bent ${required} „${ch.toUpperCase()}“. `)
+          setShake(true); setTimeout(() => setShake(false), 450)
+          return
+        }
+      }
+      // Disallow reusing letters known to be absent (stricter rule)
+      for (const ch of onlyAbsent) {
+        if (guess.includes(ch)) {
+          show(`Hard Mode: nenaudok raidės „${ch.toUpperCase()}“, ji nėra tiksliniame žodyje. `)
           setShake(true); setTimeout(() => setShake(false), 450)
           return
         }
@@ -135,11 +182,14 @@ export default function App() {
       } catch {}
     }
     // Always clear the typing row so only the colored submitted row remains visible
-    setState(s => ({ ...s, attempts, current: '', status, keyboard, finishedAt, bestTimeMs }))
+    setState(s => ({ ...s, attempts, current: '', status, keyboard, finishedAt, bestTimeMs, guessDeadline: null }))
     if (won) {
       const elapsed = state.startedAt && finishedAt ? finishedAt - state.startedAt : null
       const sec = elapsed ? Math.round(elapsed / 1000) : null
       show(sec !== null ? `Puiku! Atspėjai per ${sec}s.` : 'Puiku! Atspėjai!')
+      // Prepare leaderboard entry and show name modal
+      setWinMeta({ attempts: attempts.length, timeMs: elapsed, hardMode: !!state.hardMode, epochDay: state.epochDay })
+      setShowWinName(true)
     } else if (attempts.length >= 6) {
       show(`Bandymų nebeliko. Teisingas žodis: ${target.toUpperCase()}.`)
     }
@@ -152,6 +202,7 @@ export default function App() {
   }
 
   const runningMs = state.startedAt && state.status === 'playing' ? nowTs - state.startedAt : null
+  const guessRemainingMs = state.status === 'playing' && state.guessDeadline ? Math.max(0, state.guessDeadline - nowTs) : null
   function fmt(ms: number | null | undefined) {
     if (!ms || ms < 0) return '-'
     const s = Math.floor(ms / 1000)
@@ -159,6 +210,29 @@ export default function App() {
     const rem = s % 60
     return m > 0 ? `${m}m ${rem}s` : `${rem}s`
   }
+
+  // Timeout handler: consume one attempt if deadline passed
+  useEffect(() => {
+    if (state.status !== 'playing') return
+    if (!state.guessDeadline) return
+    if (Date.now() < state.guessDeadline) return
+    // Deadline reached – create a forfeited attempt (current letters marked absent)
+    const letters = Array.from({ length: 5 }, (_, i) => {
+      const ch = state.current.charAt(i) || ' '
+      return { char: ch, state: 'absent' as FeedbackCell }
+    })
+    const ar: AttemptResult = { letters }
+    const attempts = [...state.attempts, ar].slice(0, 6)
+    const keyboard = updateKeyboard(ar, state.keyboard)
+    const status: GameState['status'] = attempts.length >= 6 ? 'lost' : 'playing'
+    const finishedAt = status === 'playing' ? null : Date.now()
+    setState(s => ({ ...s, attempts, current: '', keyboard, status, finishedAt, guessDeadline: null }))
+    show('Laikas baigėsi – bandymas prarastas.')
+    // Vibrate shortly to signal timeout
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate?.(120) } catch {}
+    }
+  }, [nowTs, state.guessDeadline, state.status])
 
   function buildShareText(): string {
     const headerAttempts = state.status === 'won' ? state.attempts.length : 6
@@ -182,13 +256,13 @@ export default function App() {
 
   return (
     <div className="max-w-md mx-auto p-4 space-y-3 app-card" aria-live="polite">
-      <header className="flex items-center justify-between gap-3">
+      <header className="flex items-center justify-between gap-1">
         <h1 className="text-2xl font-bold">Wordle LT</h1>
         <div className="flex gap-2 flex-nowrap justify-end">
           <button className="keyboard-button" onClick={() => setState(s => ({ ...emptyState(), bestTimeMs: s.bestTimeMs }))}>Naujas žaidimas</button>
           <button
             className={`keyboard-button whitespace-nowrap ${state.hardMode ? 'bg-red-600 hover:bg-red-500 ring-2 ring-red-300 shadow-sm btn-pulse' : ''}`}
-            onClick={() => setState(s => ({ ...s, hardMode: !s.hardMode }))}
+            onClick={() => setState(s => ({ ...s, hardMode: !s.hardMode, guessDeadline: s.hardMode ? null : s.guessDeadline }))}
             title={state.hardMode ? 'Sunkus režimas įjungtas' : 'Sunkus režimas išjungtas'}
             aria-pressed={state.hardMode}
             aria-label={state.hardMode ? 'Sunku įjungta' : 'Sunku išjungta'}
@@ -204,6 +278,13 @@ export default function App() {
           <span className="stat-label">Laikas</span>
           <strong className="stat-value" data-testid="elapsed-time">{fmt(runningMs ?? (state.finishedAt && state.startedAt ? state.finishedAt - state.startedAt : null))}</strong>
         </div>
+        {state.status === 'playing' && state.hardMode && state.guessTimeLimitMs && (
+          <div className="stat-badge" title="Liko laiko spėjimui">
+            <span className="stat-ico">⌛</span>
+            <span className="stat-label">Spėjimo laikas</span>
+            <strong className="stat-value" data-testid="guess-remaining">{fmt(guessRemainingMs)}</strong>
+          </div>
+        )}
         <div className="stat-badge" title="Geriausias laikas">
           <span className="stat-ico">🏅</span>
           <span className="stat-label">Rekordas</span>
@@ -216,8 +297,7 @@ export default function App() {
 
       {/* Bottom actions: Rules & Stats above keyboard (all sizes) */}
       <div
-        className="sticky bottom-0 z-10 flex gap-2 justify-center pt-2 pb-2 bg-gray-900/60 backdrop-blur-md supports-[backdrop-filter]:bg-gray-900/50 border-t border-white/10 shadow-lg shadow-black/30"
-        style={{ paddingBlockEnd: 'env(safe-area-inset-bottom)' }}
+        className="sticky bottom-0 z-10 flex gap-2 justify-center pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] bg-gray-900/60 backdrop-blur-md supports-[backdrop-filter]:bg-gray-900/50 border-t border-white/10 shadow-lg shadow-black/30"
       >
         <button className="keyboard-button" onClick={() => setShowStats(true)}>📊 Statistika</button>
         <button className="keyboard-button" onClick={() => setShowRules(true)}>📜 Taisyklės</button>
@@ -239,6 +319,33 @@ export default function App() {
 
       <RulesModal open={showRules} onClose={() => setShowRules(false)} />
       <StatsModal open={showStats} onClose={() => setShowStats(false)} />
+      <WinNameModal
+        open={showWinName}
+        onClose={() => setShowWinName(false)}
+        onSubmit={(name) => {
+          try {
+            if (winMeta) {
+              addLeaderboardEntry({
+                name,
+                epochDay: winMeta.epochDay,
+                attempts: winMeta.attempts,
+                timeMs: winMeta.timeMs ?? null,
+                hardMode: winMeta.hardMode,
+                dateISO: new Date().toISOString(),
+              })
+              // remember last used name
+              try { localStorage.setItem('wordle-lt:last-name', name) } catch {}
+              show('Vardas išsaugotas lyderių lentelėje!')
+            }
+          } finally {
+            setShowWinName(false)
+            setWinMeta(null)
+          }
+        }}
+        defaultName={(() => {
+          try { return localStorage.getItem('wordle-lt:last-name') || '' } catch { return '' }
+        })()}
+      />
     </div>
   )
 }

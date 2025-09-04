@@ -9,7 +9,7 @@ export function Confetti({ duration = 2500 }: { duration?: number }) {
     const ctx = canvas.getContext('2d')!
     let raf = 0
     let running = true
-    const start = performance.now()
+    let start: number | null = null
 
     function resize() {
       canvas.width = window.innerWidth
@@ -32,9 +32,19 @@ export function Confetti({ duration = 2500 }: { duration?: number }) {
     }))
 
     function tick(t: number) {
+      if (start === null) start = t // Initialize start time on first call
       const elapsed = t - start
       if (elapsed > duration) running = false
+      
+      // Calculate fade out alpha in the last 500ms
+      const fadeOutStart = duration - 500
+      const alpha = elapsed > fadeOutStart 
+        ? Math.max(0, 1 - (elapsed - fadeOutStart) / 500)
+        : 1
+      
       ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.globalAlpha = alpha
+      
       for (const p of parts) {
         p.x += p.vx
         p.y += p.vy
@@ -50,6 +60,8 @@ export function Confetti({ duration = 2500 }: { duration?: number }) {
         ctx.fillRect(-p.r, -p.r * 0.4, p.r * 2, p.r * 0.8)
         ctx.restore()
       }
+      
+      ctx.globalAlpha = 1 // Reset alpha for next frame
       if (running) raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 :root { color-scheme: dark; }
+
+/* (Removed custom board spacing utilities; use Tailwind gap-* classes instead) */
 body {
   background: radial-gradient(1200px 600px at 50% -10%, rgba(16,185,129,0.12), rgba(0,0,0,0)) no-repeat,
               radial-gradient(1000px 500px at 120% 10%, rgba(59,130,246,0.10), rgba(0,0,0,0)) no-repeat,
@@ -55,18 +57,18 @@ body {
 .key-btn:active::after { animation: key-ripple 320ms ease-out forwards; }
 
 /* On-screen keyboard sizing helpers */
-.key-wide { min-width: 3.5rem; padding-left: 0.75rem; padding-right: 0.75rem; }
+.key-wide { min-inline-size: 3.5rem; padding-left: 0.75rem; padding-right: 0.75rem; }
 .key-small { padding: 0.25rem 0.5rem; font-size: 0.9rem; line-height: 1; }
 
-@media (max-width: 420px) {
-  .key-wide { min-width: 3rem; }
+@media (max-inline-size: 420px) {
+  .key-wide { min-inline-size: 3rem; }
   .key-small { font-size: 0.85rem; }
 }
 
 /* Legend square */
 .legend-box {
   display: inline-block;
-  width: 1.25rem;
+  inline-size: 1.25rem;
   height: 1.25rem;
   border: 2px solid #374151; /* gray-700 */
   border-radius: 0.25rem;
@@ -74,9 +76,10 @@ body {
 
 /* Responsive tile sizing for mobile */
 .tile {
-  width: 3.25rem;
+  inline-size: 3.25rem;
   height: 3.25rem;
-  border-width: 2px;
+  border: 1px solid #374151; /* gray-700 */
+  padding: 2px; /* small inner gap around the letter */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,8 +91,8 @@ body {
   backface-visibility: hidden;
 }
 
-@media (max-width: 420px) {
-  .tile { width: 13.5vw; height: 13.5vw; font-size: 6vw; }
+@media (max-inline-size: 420px) {
+  .tile { inline-size: 13.5vw; height: 13.5vw; font-size: 6vw; }
 }
 
 /* Animations */
@@ -199,3 +202,118 @@ body {
   100% { transform: translateZ(0) scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0); }
 }
 .btn-pulse { animation: soft-pulse 2400ms ease-in-out infinite; }
+
+/* Tailwind extension utilities */
+@layer utilities {
+  /* Percentage width utilities for bar charts (6%..100%) */
+  .w-pct-6 { inline-size: 6%; }
+  .w-pct-7 { inline-size: 7%; }
+  .w-pct-8 { inline-size: 8%; }
+  .w-pct-9 { inline-size: 9%; }
+  .w-pct-10 { inline-size: 10%; }
+  .w-pct-11 { inline-size: 11%; }
+  .w-pct-12 { inline-size: 12%; }
+  .w-pct-13 { inline-size: 13%; }
+  .w-pct-14 { inline-size: 14%; }
+  .w-pct-15 { inline-size: 15%; }
+  .w-pct-16 { inline-size: 16%; }
+  .w-pct-17 { inline-size: 17%; }
+  .w-pct-18 { inline-size: 18%; }
+  .w-pct-19 { inline-size: 19%; }
+  .w-pct-20 { inline-size: 20%; }
+  .w-pct-21 { inline-size: 21%; }
+  .w-pct-22 { inline-size: 22%; }
+  .w-pct-23 { inline-size: 23%; }
+  .w-pct-24 { inline-size: 24%; }
+  .w-pct-25 { inline-size: 25%; }
+  .w-pct-26 { inline-size: 26%; }
+  .w-pct-27 { inline-size: 27%; }
+  .w-pct-28 { inline-size: 28%; }
+  .w-pct-29 { inline-size: 29%; }
+  .w-pct-30 { inline-size: 30%; }
+  .w-pct-31 { inline-size: 31%; }
+  .w-pct-32 { inline-size: 32%; }
+  .w-pct-33 { inline-size: 33%; }
+  .w-pct-34 { inline-size: 34%; }
+  .w-pct-35 { inline-size: 35%; }
+  .w-pct-36 { inline-size: 36%; }
+  .w-pct-37 { inline-size: 37%; }
+  .w-pct-38 { inline-size: 38%; }
+  .w-pct-39 { inline-size: 39%; }
+  .w-pct-40 { inline-size: 40%; }
+  .w-pct-41 { inline-size: 41%; }
+  .w-pct-42 { inline-size: 42%; }
+  .w-pct-43 { inline-size: 43%; }
+  .w-pct-44 { inline-size: 44%; }
+  .w-pct-45 { inline-size: 45%; }
+  .w-pct-46 { inline-size: 46%; }
+  .w-pct-47 { inline-size: 47%; }
+  .w-pct-48 { inline-size: 48%; }
+  .w-pct-49 { inline-size: 49%; }
+  .w-pct-50 { inline-size: 50%; }
+  .w-pct-51 { inline-size: 51%; }
+  .w-pct-52 { inline-size: 52%; }
+  .w-pct-53 { inline-size: 53%; }
+  .w-pct-54 { inline-size: 54%; }
+  .w-pct-55 { inline-size: 55%; }
+  .w-pct-56 { inline-size: 56%; }
+  .w-pct-57 { inline-size: 57%; }
+  .w-pct-58 { inline-size: 58%; }
+  .w-pct-59 { inline-size: 59%; }
+  .w-pct-60 { inline-size: 60%; }
+  .w-pct-61 { inline-size: 61%; }
+  .w-pct-62 { inline-size: 62%; }
+  .w-pct-63 { inline-size: 63%; }
+  .w-pct-64 { inline-size: 64%; }
+  .w-pct-65 { inline-size: 65%; }
+  .w-pct-66 { inline-size: 66%; }
+  .w-pct-67 { inline-size: 67%; }
+  .w-pct-68 { inline-size: 68%; }
+  .w-pct-69 { inline-size: 69%; }
+  .w-pct-70 { inline-size: 70%; }
+  .w-pct-71 { inline-size: 71%; }
+  .w-pct-72 { inline-size: 72%; }
+  .w-pct-73 { inline-size: 73%; }
+  .w-pct-74 { inline-size: 74%; }
+  .w-pct-75 { inline-size: 75%; }
+  .w-pct-76 { inline-size: 76%; }
+  .w-pct-77 { inline-size: 77%; }
+  .w-pct-78 { inline-size: 78%; }
+  .w-pct-79 { inline-size: 79%; }
+  .w-pct-80 { inline-size: 80%; }
+  .w-pct-81 { inline-size: 81%; }
+  .w-pct-82 { inline-size: 82%; }
+  .w-pct-83 { inline-size: 83%; }
+  .w-pct-84 { inline-size: 84%; }
+  .w-pct-85 { inline-size: 85%; }
+  .w-pct-86 { inline-size: 86%; }
+  .w-pct-87 { inline-size: 87%; }
+  .w-pct-88 { inline-size: 88%; }
+  .w-pct-89 { inline-size: 89%; }
+  .w-pct-90 { inline-size: 90%; }
+  .w-pct-91 { inline-size: 91%; }
+  .w-pct-92 { inline-size: 92%; }
+  .w-pct-93 { inline-size: 93%; }
+  .w-pct-94 { inline-size: 94%; }
+  .w-pct-95 { inline-size: 95%; }
+  .w-pct-96 { inline-size: 96%; }
+  .w-pct-97 { inline-size: 97%; }
+  .w-pct-98 { inline-size: 98%; }
+  .w-pct-99 { inline-size: 99%; }
+  .w-pct-100 { inline-size: 100%; }
+
+  /* Submitted row: CSS-based stagger (no inline delays) */
+  .row-submitted > .tile { animation: flip-in 300ms ease-out both; }
+  .row-submitted > .tile:nth-child(1) { animation-delay: 0ms; }
+  .row-submitted > .tile:nth-child(2) { animation-delay: 110ms; }
+  .row-submitted > .tile:nth-child(3) { animation-delay: 220ms; }
+  .row-submitted > .tile:nth-child(4) { animation-delay: 330ms; }
+  .row-submitted > .tile:nth-child(5) { animation-delay: 440ms; }
+
+  /* After flip, add a subtle pulse for correct tiles when won */
+  .row-submitted.row-won > .bg-correct:nth-child(1) { animation: flip-in 300ms ease-out 0ms both, pulse-win 300ms ease-in-out 300ms both; }
+  .row-submitted.row-won > .bg-correct:nth-child(2) { animation: flip-in 300ms ease-out 110ms both, pulse-win 300ms ease-in-out 410ms both; }
+  .row-submitted.row-won > .bg-correct:nth-child(3) { animation: flip-in 300ms ease-out 220ms both, pulse-win 300ms ease-in-out 520ms both; }
+  .row-submitted.row-won > .bg-correct:nth-child(4) { animation: flip-in 300ms ease-out 330ms both, pulse-win 300ms ease-in-out 630ms both; }
+  .row-submitted.row-won > .bg-correct:nth-child(5) { animation: flip-in 300ms ease-out 440ms both, pulse-win 300ms ease-in-out 740ms both; }
+}

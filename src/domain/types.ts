@@ -24,4 +24,7 @@ export interface GameState {
   bestTimeMs?: number
   // options
   hardMode?: boolean
+  // per-guess time limit
+  guessTimeLimitMs?: number
+  guessDeadline?: number | null
 }

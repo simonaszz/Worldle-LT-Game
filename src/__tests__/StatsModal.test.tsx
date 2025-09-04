@@ -15,6 +15,7 @@ vi.mock('../storage', async (orig) => {
       lastPlayedDay: 123,
       resultsByDay: { 120: 'win', 121: 'loss', 122: 'win', 123: 'win' },
     }),
+    loadLeaderboard: () => [],
   }
 })
 

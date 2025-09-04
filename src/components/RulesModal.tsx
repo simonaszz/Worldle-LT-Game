@@ -42,9 +42,25 @@ export function RulesModal({ open, onClose }: { open: boolean; onClose: () => vo
           <li>Leidžiamos LT raidės su diakritikomis: <strong>a–z ą č ę ė į š ų ū ž</strong>. Įvestis saugoma <em>nekeičiant</em> diakritikų.</li>
           <li>Pasikartojančios raidės: jei žodyje ta raidė yra tik <em>kartą</em>, tik viena plytelė nusidažys (pagal vietą), likusios bus pilkos.</li>
           <li>Ekraninė klaviatūra irgi rodo užuominas: žalia/pilka/geltona pagal tavo bandymus.</li>
-          <li>Kiekvieną dieną – <strong>naujas žodis</strong> visiems žaidėjams.</li>
-          <li><strong>Hard Mode</strong> (⚡ Sunku): turi naudoti visas anksčiau atskleistas užuominas (žalios pozicijos fiksuotos, geltonos – privalomos).</li>
+          <li>Kiekvienam naujam žaidimui – <strong>atsitiktinis žodis</strong>.</li>
+          <li>Laimėjus galima įvesti vardą ir patekti į <strong>lyderių lentelę</strong> (top 10).</li>
         </ul>
+
+        <h3 className="text-lg font-semibold mt-4 mb-1">⚡ Sunkus režimas (Hard Mode)</h3>
+        <div className="bg-gray-700/50 rounded p-3 mb-2">
+          <p className="mb-2">Įjungus sunkų režimą:</p>
+          <ul className="list-disc pl-6 space-y-1 text-sm">
+            <li><strong>Žalios raidės</strong> – turi likti tose pačiose pozicijose kituose bandymuose</li>
+            <li><strong>Geltonos raidės</strong> – turi būti panaudotos kituose bandymuose (bet kitose pozicijose)</li>
+            <li><strong>Laikmatis</strong> – turite 20 sekundžių kiekvienam bandymui</li>
+            <li><strong>Pažeidimas</strong> – jei nepaisysite taisyklių, bandymas bus atmestas</li>
+            <li><strong>Laiko pabaiga</strong> – jei laikas baigiasi, bandymas automatiškai praleidžiamas</li>
+          </ul>
+        </div>
+        <p className="text-sm text-gray-400 mb-2">
+          <strong>Pavyzdys:</strong> Jei pirmame bandyme gavote žalią "A" 2-oje pozicijoje ir geltoną "S" 1-oje pozicijoje, 
+          tai antrame bandyme 2-oje pozicijoje <em>privalai</em> rašyti "A", o "S" <em>privalai</em> panaudoti, bet ne 1-oje pozicijoje.
+        </p>
 
         <h3 className="text-lg font-semibold mt-4 mb-1">Patarimai</h3>
         <ul className="list-disc pl-6 space-y-1">

@@ -81,9 +81,18 @@ export function pickDailyTarget(epochDay: number, wordlistVersion: number): { in
   return { index: idx, word }
 }
 
+// Random target picker for non-deterministic games
+export function pickRandomTarget(): { index: number; word: string } {
+  const len = solutions.length || 1
+  const idx = Math.floor(Math.random() * len) % len
+  const word = (solutions as unknown as string[])[idx] ?? 'žodis'
+  return { index: idx, word }
+}
+
 export function emptyState(): GameState {
   const today = baseEpochDay()
-  const p = pickDailyTarget(today, WORDLIST_VERSION)
+  // Use random target for each new game
+  const p = pickRandomTarget()
   return {
     current: '',
     attempts: [],
@@ -96,5 +105,7 @@ export function emptyState(): GameState {
     startedAt: null,
     finishedAt: null,
     hardMode: false,
+    guessTimeLimitMs: 20000,
+    guessDeadline: null,
   }
 }
