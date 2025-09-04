@@ -255,7 +255,7 @@ export default function App() {
   }
 
   return (
-    <div className="max-w-md mx-auto p-4 space-y-3 app-card" aria-live="polite">
+    <div className="max-w-md mx-auto p-4 space-y-3 app-card min-h-[100svh] pt-[max(1rem,env(safe-area-inset-top))]" aria-live="polite">
       <header className="flex items-center justify-between gap-1">
         <h1 className="text-2xl font-bold">Wordle LT</h1>
         <div className="flex gap-2 flex-nowrap justify-end">
@@ -297,7 +297,7 @@ export default function App() {
 
       {/* Bottom actions: Rules & Stats above keyboard (all sizes) */}
       <div
-        className="sticky bottom-0 z-10 flex gap-2 justify-center pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] bg-gray-900/60 backdrop-blur-md supports-[backdrop-filter]:bg-gray-900/50 border-t border-white/10 shadow-lg shadow-black/30"
+        className="relative sm:sticky bottom-0 z-10 flex gap-2 justify-center pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] bg-gray-900/60 backdrop-blur-md supports-[backdrop-filter]:bg-gray-900/50 border-t border-white/10 shadow-lg shadow-black/30"
       >
         <button className="keyboard-button" onClick={() => setShowStats(true)}>📊 Statistika</button>
         <button className="keyboard-button" onClick={() => setShowRules(true)}>📜 Taisyklės</button>
@@ -312,7 +312,7 @@ export default function App() {
       )}
 
       {toast && (
-        <div role="status" className="toast fixed bottom-4 left-1/2 -translate-x-1/2">
+        <div role="status" className="toast fixed left-1/2 -translate-x-1/2 bottom-[max(1rem,env(safe-area-inset-bottom))]">
           {toast}
         </div>
       )}

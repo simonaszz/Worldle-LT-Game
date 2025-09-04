@@ -15,7 +15,7 @@ export function Board({ attempts, current, shakeCurrent, won }: { attempts: Atte
       {rows.map((row, i) => {
         const isSubmittedRow = i < attempts.length && i === attempts.length - 1
         const isCurrentRow = i === attempts.length
-        const rowCls = `grid grid-cols-5 gap-4 px-2 mx-auto ${isSubmittedRow ? 'row-submitted' : ''} ${isSubmittedRow && won ? 'row-won' : ''} ${isCurrentRow && shakeCurrent ? 'anim-shake' : ''}`
+        const rowCls = `grid grid-cols-5 gap-2.5 sm:gap-4 px-2 mx-auto ${isSubmittedRow ? 'row-submitted' : ''} ${isSubmittedRow && won ? 'row-won' : ''} ${isCurrentRow && shakeCurrent ? 'anim-shake' : ''}`
         return (
         <div key={i} className={rowCls}>
           {row.letters.map((l, j) => {

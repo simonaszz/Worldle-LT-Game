@@ -80,8 +80,13 @@ export function StatsModal({ open, onClose, animationDuration = 700 }: { open: b
   }
 
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-labelledby="stats-title" className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4 modal-overlay" onClick={handleRequestClose}>
-      <div className="relative z-[10000] bg-gray-800 text-gray-100 rounded p-4 max-w-lg w-full shadow-2xl shadow-black/40 modal-card" role="document" onClick={(e) => e.stopPropagation()}>
+    <div role="dialog" aria-modal="true" aria-labelledby="stats-title" className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-2 sm:p-4 modal-overlay" onClick={handleRequestClose}>
+      <div
+        className="relative z-[10000] bg-gray-800 text-gray-100 rounded p-4 max-w-lg w-full shadow-2xl shadow-black/40 modal-card max-h-[min(92svh,700px)] overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))]"
+        role="document"
+        onClick={(e) => e.stopPropagation()}
+        style={{ WebkitOverflowScrolling: 'touch' as any }}
+      >
         <h2 id="stats-title" className="text-xl font-bold mb-3">📊 Statistika</h2>
         <div className="grid grid-cols-4 gap-3 text-center" role="group" aria-label="KPI">
           <div>
